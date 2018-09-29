@@ -62,3 +62,33 @@ services:
       traefik.frontend.rule: Host:app.local.gauvr.it
     volumes:
       - ./app/app.py:/srv/app/app.py:ro
+
+  prometheus:
+    image: prom/prometheus
+    environment:
+      SERVICE_NAME: prometheus
+    networks:
+      - lan
+    labels:
+      traefik.frontend.rule: Host:prometheus.local.gauvr.it
+    depends_on:
+      - consul
+    volumes:
+      - ./conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:5.2.4
+    networks:
+      - lan
+    environment:
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,natel-discrete-panel
+      GF_SECURITY_ADMIN_PASSWORD: lapin
+      GF_SERVER_ROOT_URL: http://grafana.local.gauvr.it
+      SERVICE_NAME: grafana
+    labels:
+      traefik.frontend.rule: Host:grafana.local.gauvr.it
+    depends_on:
+      - prometheus
+    volumes:
+      - ./conf/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./conf/grafana/dashboards:/var/lib/grafana/dashboards:ro
