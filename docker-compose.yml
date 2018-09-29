@@ -1,0 +1,52 @@
+version: '2.1'
+networks:
+  lan:
+  wan:
+
+services:
+
+  consul:
+    image: progrium/consul:latest
+    networks:
+      - lan
+    hostname: consul
+    command: -server -bootstrap -ui-dir /ui
+    environment:
+      SERVICE_53_IGNORE: "true"
+      SERVICE_8300_IGNORE: "true"
+      SERVICE_8301_IGNORE: "true"
+      SERVICE_8302_IGNORE: "true"
+      SERVICE_8400_IGNORE: "true"
+      SERVICE_8500_NAME: srv
+    labels:
+      traefik.web.frontend.rule: Host:srv.local.gauvr.it
+      traefik.web.port: '8500'
+
+  registrator:
+    command: -internal consul://consul:8500
+    image: gliderlabs/registrator
+    networks:
+      - lan
+    depends_on:
+      - consul
+    labels:
+      traefik.enable: "false"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  lb:
+    image: traefik
+    command: --docker
+    networks:
+      - wan
+      - lan
+    environment:
+      SERVICE_443_NAME: lbs
+      SERVICE_80_NAME: lb
+    ports:
+      - 80:80/tcp
+      - 443:443/tcp
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./conf/traefik.toml:/traefik.toml:ro
+      - ./certs:/certs:ro
