@@ -1,15 +1,21 @@
 import os
 import logging
+import atexit
 
 from pyramid.config import Configurator
 from pyramid.response import Response
 from pyramid.view import view_config
 from prometheus_client import Counter, CollectorRegistry, generate_latest
-from prometheus_client.multiprocess import MultiProcessCollector
+from prometheus_client.multiprocess import MultiProcessCollector, mark_process_dead
 
 log = logging.getLogger('app')
 
 app_hello_count = Counter('app_hello_count', 'Number of hello world')
+
+@atexit.register
+def mark_dead():
+    log.info('Child process is dead')
+    mark_process_dead(os.getpid())
 
 
 @view_config(route_name='hello')
