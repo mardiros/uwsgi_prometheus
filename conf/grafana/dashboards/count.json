@@ -54,12 +54,21 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum without(instance)(app_hello_count)",
+          "expr": "sum without(instance)(app_hello_count * on (instance, job) group_left (version, python_version) app_info)",
           "format": "time_series",
+          "hide": false,
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "count",
+          "legendFormat": "",
           "refId": "A"
+        },
+        {
+          "expr": "app_hello_count * on (instance, job) group_left (version, python_version) app_info",
+          "format": "time_series",
+          "hide": true,
+          "intervalFactor": 1,
+          "legendFormat": "V {{version}}",
+          "refId": "B"
         }
       ],
       "thresholds": [],
@@ -103,6 +112,7 @@
       }
     }
   ],
+  "refresh": "10s",
   "schemaVersion": 16,
   "style": "dark",
   "tags": [],
@@ -110,7 +120,7 @@
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {

@@ -1,16 +1,35 @@
 import os
+import sys
 import logging
 import atexit
 
 from pyramid.config import Configurator
 from pyramid.response import Response
 from pyramid.view import view_config
-from prometheus_client import Counter, CollectorRegistry, generate_latest
+from prometheus_client import Counter, Gauge, CollectorRegistry, generate_latest
 from prometheus_client.multiprocess import MultiProcessCollector, mark_process_dead
+
+__VERSION__ = '1.0'
+version_info = {
+    'version': __VERSION__,
+    'python_version': '{0}.{1}.{2}'.format(
+        sys.version_info.major,
+        sys.version_info.minor,
+        sys.version_info.micro)
+}
+
 
 log = logging.getLogger('app')
 
 app_hello_count = Counter('app_hello_count', 'Number of hello world')
+app_info = Gauge(
+    'app_info',
+    'Application Information',
+    labelnames=version_info.keys(),
+    multiprocess_mode='livesum'
+    )
+app_info.labels(**version_info).set(1)
+
 
 @atexit.register
 def mark_dead():
